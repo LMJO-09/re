@@ -182,19 +182,49 @@
     <script>
         let supabaseClient = null;
 
+        // دالة التفعيل التلقائي عند فتح الصفحة (تتحقق إذا المفاتيح مخزنة مسبقاً لمنع الريست بعد جوجل)
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem('sb_url');
+            const savedKey = localStorage.getItem('sb_key');
+            
+            if (savedUrl && savedKey) {
+                // تعبئة الخانات تلقائياً
+                document.getElementById('supUrl').value = savedUrl;
+                document.getElementById('supKey').value = savedKey;
+                
+                // تشغيل الاتصال فوراً بالخلفية
+                connectSupabase(savedUrl, savedKey);
+            }
+        });
+
+        // دالة الزر عند الضغط يدوياً أول مرة
         function initSupabase() {
             const url = document.getElementById('supUrl').value.trim();
             const key = document.getElementById('supKey').value.trim();
-            if (!url || !key) { alert('الرجاء إدخل بيانات الـ API أولاً!'); return; }
+            if (!url || !key) { alert('الرجاء إدخال بيانات الـ API أولاً!'); return; }
             
+            // حفظ المفاتيح بذاكرة المتصفح الدائمة لتتحمل الـ Redirect
+            localStorage.setItem('sb_url', url);
+            localStorage.setItem('sb_key', key);
+            
+            connectSupabase(url, key);
+        }
+
+        // محرك تشغيل الـ SDK والـ Listeners
+        function connectSupabase(url, key) {
             try {
                 supabaseClient = supabase.createClient(url, key);
-                document.getElementById('configBox').className = "bg-emerald-950/40 border border-emerald-800 rounded-2xl p-4 mb-8 text-center";
-                document.getElementById('configBox').innerHTML = `<p class="text-emerald-400 font-bold text-sm">✅ تم تفعيل الـ SDK بنجاح والاتصال مستقر الآن مع كافة الفهارس والسياسات الـ 24.</p>`;
                 
+                // تغيير شكل الصندوق ليعرف الأدمن أن الاتصال فعال وثابت
+                document.getElementById('configBox').className = "bg-emerald-950/40 border border-emerald-800 rounded-2xl p-4 mb-8 text-center";
+                document.getElementById('configBox').innerHTML = `<p class="text-emerald-400 font-bold text-sm">✅ تم تفعيل الـ SDK بنجاح والاتصال مستقر ومحفوظ بذاكرة المتصفح الدائمة.</p>`;
+                
+                // تشغيل المراقبة الفورية للجلسة والتحذيرات
                 listenToAuthChanges();
                 listenToRealtimeWarnings();
-            } catch (e) { alert('فشل الاتصال: ' + e.message); }
+            } catch (e) { 
+                alert('فشل الاتصال: ' + e.message); 
+            }
         }
 
         function checkInit() { if(!supabaseClient) { alert('من فضلك فعّل اتصال السيرفر في الصندوق العلوي أولاً!'); return false;} return true; }
@@ -206,12 +236,27 @@
             event.currentTarget.className = "tab-btn bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all";
         }
 
+        // مراقبة حالة الجلسة وتحديث الواجهة تلقائياً حتى بعد الـ Redirect
+        function listenToAuthChanges() {
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                const userBox = document.getElementById('sessionUser');
+                if (session) {
+                    userBox.innerText = session.user.email + ` (UUID: ${session.user.id})`;
+                } else {
+                    userBox.innerText = "زائر غير مسجل";
+                }
+            });
+        }
+
         // تسجيل الدخول عبر قوقل وآبل
         async function loginWithGoogle() {
             if (!checkInit()) return;
             const { error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
-                options: { redirectTo: window.location.href, queryParams: { prompt: 'select_account' } }
+                options: { 
+                    redirectTo: window.location.href, // العودة لنفس الصفحة الحالية على جيت هب
+                    queryParams: { prompt: 'select_account' } 
+                }
             });
             if (error) alert('خطأ أثناء الاتصال بجوجل: ' + error.message);
         }
@@ -225,18 +270,15 @@
             if (error) alert('خطأ أثناء الاتصال بنظام Apple: ' + error.message);
         }
 
-        function listenToAuthChanges() {
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                const userBox = document.getElementById('sessionUser');
-                if (session) {
-                    userBox.innerText = session.user.email + ` (UUID: ${session.user.id})`;
-                } else {
-                    userBox.innerText = "زائر غير مسجل";
-                }
-            });
+        async function logout() { 
+            if(checkInit()) { 
+                await supabaseClient.auth.signOut(); 
+                localStorage.removeItem('sb_url');
+                localStorage.removeItem('sb_key');
+                alert('تم تسجيل الخروج ومسح الذاكرة الدائمة بنجاح.');
+                window.location.reload();
+            } 
         }
-
-        async function logout() { if(checkInit()) { await supabaseClient.auth.signOut(); alert('تم تسجيل الخروج بأمان.'); } }
 
         // إدارة المنشورات
         async function createPost() {
@@ -323,7 +365,7 @@
             else { alert('✅ تم قبول الرد وتمريره بنجاح.'); }
         }
 
-        // عمليات المسؤولين
+        // عمليات المسؤولين والعقوبات
         async function applyTimeout() {
             if (!checkInit()) return;
             const userId = document.getElementById('restrictUserId').value.trim();
@@ -353,6 +395,7 @@
             else alert('⚡ تم إرسال وبث التحذير الإداري الحي بنجاح!');
         }
 
+        // استقبال التحذيرات الفورية بث حي ومباشر بدون ريفريش الصفحة
         function listenToRealtimeWarnings() {
             supabaseClient
                 .channel('schema-db-changes')
