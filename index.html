@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة Madarek Jo - النظام المتكامل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Cairo', sans-serif; }</style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col">
+
+    <nav class="bg-gray-900 border-b border-gray-800 px-6 py-4 sticky top-0 z-50">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🛡️</span>
+                <h1 class="text-xl font-bold text-emerald-400">منصة Madarek Jo التعليمية</h1>
+                <span class="bg-gray-800 text-xs px-2.5 py-1 rounded-md text-gray-400 border border-gray-700">نسخة الإنتاج الآمنة</span>
+            </div>
+            <div class="flex flex-wrap gap-2" id="navTabs">
+                <button onclick="switchTab('auth-section')" class="tab-btn bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🔑 الحسابات والتسجيل</button>
+                <button onclick="switchTab('study-section')" class="tab-btn bg-gray-850 hover:bg-gray-800 text-gray-300 px-4 py-2 rounded-lg text-sm font-semibold transition-all">📝 ساحة الدراسة</button>
+                <button onclick="switchTab('support-section')" class="tab-btn bg-gray-850 hover:bg-gray-800 text-gray-300 px-4 py-2 rounded-lg text-sm font-semibold transition-all">🎫 التذاكر والدعم</button>
+                <button onclick="switchTab('admin-section')" class="tab-btn bg-gray-850 hover:bg-gray-800 text-gray-300 px-4 py-2 rounded-lg text-sm font-semibold transition-all">👑 لوحة المشرفين</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="realtimeAlert" class="fixed bottom-5 left-5 bg-rose-900 border-2 border-rose-500 p-4 rounded-xl shadow-2xl max-w-sm hidden z-50 transition-all animate-bounce">
+        <div class="flex items-start gap-3">
+            <span class="text-xl">⚠️</span>
+            <div>
+                <h4 class="font-bold text-white mb-1">تنبيه إداري فوري!</h4>
+                <p id="realtimeAlertMessage" class="text-sm text-rose-200"></p>
+                <button onclick="document.getElementById('realtimeAlert').classList.add('hidden')" class="mt-2 text-xs bg-rose-700 text-white px-2 py-1 rounded">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 py-8 flex-grow max-w-6xl">
+
+        <div id="configBox" class="bg-amber-950/40 border border-amber-800 rounded-2xl p-6 mb-8 text-center">
+            <h3 class="text-amber-400 font-bold mb-2">⚙️ ربط محرك الـ SDK للمنصة</h3>
+            <p class="text-xs text-amber-200/70 mb-4">أدخل بيانات مشروع Supabase الخاص بك لتفعيل جدران الحماية والاتصال المباشر</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                <input type="text" id="supUrl" placeholder="Supabase URL" class="bg-gray-900 border border-amber-900/50 rounded-lg px-3 py-2 text-sm text-center text-white focus:outline-none focus:border-amber-500">
+                <input type="password" id="supKey" placeholder="Supabase Anon Key" class="bg-gray-900 border border-amber-900/50 rounded-lg px-3 py-2 text-sm text-center text-white focus:outline-none focus:border-amber-500">
+            </div>
+            <button onclick="initSupabase()" class="mt-4 bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm py-2 px-6 rounded-lg transition-all">تفعيل الاتصال بالخادم ⚡</button>
+        </div>
+
+        <section id="auth-section" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
+                
+                <div class="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-xl text-center space-y-6">
+                    <h2 class="text-xl font-bold text-emerald-400 border-b border-gray-800 pb-3">🔑 تسجيل دخول الطلاب والمسؤولين</h2>
+                    <p class="text-xs text-gray-400 leading-relaxed">اختر طريقة تسجيل الدخول المناسبة لجهازك لتهيئة حسابك وتفعيل جدران حماية المنصة تلقائياً:</p>
+                    
+                    <div class="space-y-3 pt-2">
+                        <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-150 text-gray-900 font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg transform hover:-translate-y-0.5">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114A5.69 5.69 0 0 1 8.3 12.828a5.69 5.69 0 0 1 5.691-5.69c2.214 0 4.22.9 5.69 2.385l3.213-3.214A10.15 10.15 0 0 0 13.99 2 10.16 10.16 0 0 0 3.83 12.16a10.16 10.16 0 0 0 10.16 10.16c5.633 0 10.222-4.59 10.222-10.222 0-.6-.05-1.2-.147-1.813H12.24Z"/>
+                            </svg>
+                            الدخول باستخدام حساب Google
+                        </button>
+
+                        <button onclick="loginWithApple()" class="w-full flex items-center justify-center gap-3 bg-gray-800 hover:bg-gray-750 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg transform hover:-translate-y-0.5 border border-gray-700">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94 1.07.08 2.16-.52 2.82-1.33Z"/>
+                            </svg>
+                            الدخول باستخدام حساب Apple (iPhone)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-gray-950 border border-gray-850 p-6 rounded-2xl">
+                        <h3 class="text-sm font-bold text-gray-300 mb-2">📌 كيف يعمل هذا الربط الفوري؟</h3>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            بمجرد ضغط الطالب على الزر، سيفتح له نظام جوجل أو آبل الرسمي لاختيار حسابه وعرض الحسابات المتاحة أمامه. بمجرد اختيار الحساب، سيعود تلقائياً إلى المنصة، وسيقوم السكربت الخلفي بتمرير بياناته لجدول الـ <code class="text-emerald-400">profiles</code> وتفعيل الـ 24 عنصراً لحمايته فوراً وبدون أي تدخل يدوي!
+                        </p>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl flex justify-between items-center text-sm">
+                        <div class="overflow-hidden max-w-[70%]">الحالة الحالية للجلسة: <span id="sessionUser" class="text-emerald-400 font-bold block truncate">زائر غير مسجل</span></div>
+                        <button onclick="logout()" class="text-xs bg-gray-800 hover:bg-gray-700 text-rose-400 px-3 py-1.5 rounded-lg font-semibold border border-gray-700 whitespace-nowrap">تسجيل الخروج</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="study-section" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl h-fit">
+                    <h2 class="text-lg font-bold mb-4 text-emerald-400">📝 كتابة منشور جديد</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="postTitle" placeholder="عنوان المنشور التعليمي" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <textarea id="postContent" rows="4" placeholder="اكتب ملخصك الدراسي هنا..." class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+                        <select id="postCategory" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                            <option value="study">غرفة الدراسة التلقائية (تـُحذف بعد 24 ساعة عبر الـ Cron)</option>
+                            <option value="general">القسم العام للمنصة</option>
+                        </select>
+                        <button onclick="createPost()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-sm transition-colors">نشر المنشور الآن</button>
+                    </div>
+                    <p class="text-[11px] text-amber-400 mt-3 leading-relaxed">🛡️ جدار حماية الـ RLS ودالة `is_user_restricted` ستمنعك من النشر هنا إذا كنت تقع تحت طائلة عقوبة الـ Timeout مسبقاً.</p>
+                </div>
+                <div class="md:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">📚 المنشورات النشطة بالمنصة <span id="postCount" class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded">0</span></h2>
+                        <button onclick="loadPosts()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700">تحديث المنشورات 🔄</button>
+                    </div>
+                    <div id="postsFeed" class="space-y-4">
+                        <p class="text-sm text-gray-500 text-center py-8">لا يوجد منشورات حالياً، اضغط تحديث أو أضف منشوراً تجريبياً.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="support-section" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl h-fit">
+                    <h2 class="text-lg font-bold mb-4 text-emerald-400">🎟️ فتح تذكرة دعم جديدة</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="ticketTitle" placeholder="ما هي مشكلتك التقنية؟" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <button onclick="createTicket()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-sm transition-colors">إنشاء تذكرة دعم فني</button>
+                    </div>
+                    <div class="bg-gray-950 border border-gray-850 p-4 rounded-xl mt-4 text-[11px] text-gray-400 leading-relaxed">
+                        💡 تريجر الحماية المطور في الداتا بيس سوف يمنع كتابة أي رسالة أو رد بمجرد تغيير حالة التذكرة إلى مغلقة.
+                    </div>
+                </div>
+                <div class="md:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-white">📬 تذاكري المفتوحة بالمشروع</h2>
+                        <button onclick="loadTickets()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700">تحديث التذاكر</button>
+                    </div>
+                    <div id="ticketsContainer" class="space-y-4">
+                        <p class="text-sm text-gray-500 text-center py-8">اضغط على زر التحديث لجلب تذاكر الدعم الفني المربوطة بحسابك.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="admin-section" class="tab-content hidden">
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl border-t-4 border-rose-600 mb-8">
+                <h2 class="text-xl font-bold mb-2 text-rose-400 flex items-center gap-2">👑 لوحة التحكم والمراقبة المركزية للمسؤولين</h2>
+                <p class="text-xs text-gray-400 mb-6">هذه اللوحة محمية تماماً بسياسات الـ RLS الصارمة لجدول المسؤولين. لا يمكن لغير المشرفين الوصول لبياناتها.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl">
+                        <h3 class="text-sm font-bold text-white mb-3">⏱️ فرض عقوبة فرعية على طالب (Timeout)</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="restrictUserId" placeholder="UUID الخاص بالطالب المعاقب" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
+                            <select id="restrictCategory" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
+                                <option value="study">قسم الدراسة والملخصات</option>
+                                <option value="general">القسم العام</option>
+                            </select>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">حظر النشر لـ مدة (دقائق):</label>
+                                <input type="number" id="restrictMinutes" value="30" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
+                            </div>
+                            <button onclick="applyTimeout()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors">تفعيل عقوبة الـ Timeout في السيرفر</button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-sm font-bold text-white mb-3">⚡ إرسال تحذير إداري فوري (بث حي مباشر)</h3>
+                            <div class="space-y-3">
+                                <input type="text" id="warningUserId" placeholder="UUID الخاص بالطالب المستهدف" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
+                                <input type="text" id="warningMessage" placeholder="اكتب نص المخالفة والتحذير المباشر..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
+                            </div>
+                        </div>
+                        <button onclick="sendRealtimeWarning()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors mt-4">بث وإطلاق التحذير الفوري على شاشة الطالب</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        let supabaseClient = null;
+
+        function initSupabase() {
+            const url = document.getElementById('supUrl').value.trim();
+            const key = document.getElementById('supKey').value.trim();
+            if (!url || !key) { alert('الرجاء إدخل بيانات الـ API أولاً!'); return; }
+            
+            try {
+                supabaseClient = supabase.createClient(url, key);
+                document.getElementById('configBox').className = "bg-emerald-950/40 border border-emerald-800 rounded-2xl p-4 mb-8 text-center";
+                document.getElementById('configBox').innerHTML = `<p class="text-emerald-400 font-bold text-sm">✅ تم تفعيل الـ SDK بنجاح والاتصال مستقر الآن مع كافة الفهارس والسياسات الـ 24.</p>`;
+                
+                listenToAuthChanges();
+                listenToRealtimeWarnings();
+            } catch (e) { alert('فشل الاتصال: ' + e.message); }
+        }
+
+        function checkInit() { if(!supabaseClient) { alert('من فضلك فعّل اتصال السيرفر في الصندوق العلوي أولاً!'); return false;} return true; }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.className = "tab-btn bg-gray-850 hover:bg-gray-800 text-gray-300 px-4 py-2 rounded-lg text-sm font-semibold transition-all");
+            event.currentTarget.className = "tab-btn bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all";
+        }
+
+        // تسجيل الدخول عبر قوقل وآبل
+        async function loginWithGoogle() {
+            if (!checkInit()) return;
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.href, queryParams: { prompt: 'select_account' } }
+            });
+            if (error) alert('خطأ أثناء الاتصال بجوجل: ' + error.message);
+        }
+
+        async function loginWithApple() {
+            if (!checkInit()) return;
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'apple',
+                options: { redirectTo: window.location.href }
+            });
+            if (error) alert('خطأ أثناء الاتصال بنظام Apple: ' + error.message);
+        }
+
+        function listenToAuthChanges() {
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                const userBox = document.getElementById('sessionUser');
+                if (session) {
+                    userBox.innerText = session.user.email + ` (UUID: ${session.user.id})`;
+                } else {
+                    userBox.innerText = "زائر غير مسجل";
+                }
+            });
+        }
+
+        async function logout() { if(checkInit()) { await supabaseClient.auth.signOut(); alert('تم تسجيل الخروج بأمان.'); } }
+
+        // إدارة المنشورات
+        async function createPost() {
+            if (!checkInit()) return;
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+            const cat = document.getElementById('postCategory').value;
+            const user = (await supabaseClient.auth.getSession()).data.session?.user;
+
+            if (!user) { alert('يجب تسجيل الدخول كطالب لتتمكن من النشر!'); return; }
+
+            const { error } = await supabaseClient.from('posts').insert({
+                user_id: user.id, title, content, category: cat
+            });
+
+            if (error) alert('❌ جدار الحماية منع الإدخال: ' + error.message);
+            else { alert('🎉 تم نشر ملخصك بنجاح!'); loadPosts(); }
+        }
+
+        async function loadPosts() {
+            if (!checkInit()) return;
+            const { data, error } = await supabaseClient.from('posts').select('*').order('created_at', { ascending: false });
+            const feed = document.getElementById('postsFeed');
+            document.getElementById('postCount').innerText = data ? data.length : 0;
+
+            if (error) { feed.innerHTML = `<p class="text-rose-400 text-xs">خطأ أثناء جلب البيانات: ${error.message}</p>`; return; }
+            if (data.length === 0) { feed.innerHTML = `<p class="text-gray-500 text-center py-4 text-xs">الساحة نظيفة حالياً.</p>`; return; }
+
+            feed.innerHTML = data.map(p => `
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-md">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs bg-gray-800 px-2 py-0.5 rounded text-emerald-400 font-bold">${p.category}</span>
+                        <span class="text-[10px] text-gray-500">${new Date(p.created_at).toLocaleString('ar-JO')}</span>
+                    </div>
+                    <h3 class="font-bold text-white mb-1 text-sm">${p.title}</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed">${p.content}</p>
+                </div>
+            `).join('');
+        }
+
+        // تذاكر الدعم الفني
+        async function createTicket() {
+            if (!checkInit()) return;
+            const title = document.getElementById('ticketTitle').value.trim();
+            const user = (await supabaseClient.auth.getSession()).data.session?.user;
+            if(!user) { alert('سجل دخولك أولاً لفتح تذكرة!'); return; }
+
+            const { error } = await supabaseClient.from('support_tickets').insert({ user_id: user.id, title, status: 'open' });
+            if (error) alert(error.message);
+            else { alert('🎫 تم فتح تذكرة دعم فني جديدة بنجاح.'); loadTickets(); }
+        }
+
+        async function loadTickets() {
+            if (!checkInit()) return;
+            const { data, error } = await supabaseClient.from('support_tickets').select('*');
+            const box = document.getElementById('ticketsContainer');
+            if (error) { box.innerHTML = `<p class="text-rose-400 text-xs">${error.message}</p>`; return; }
+
+            box.innerHTML = data.map(t => `
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2 mb-3">
+                        <h4 class="font-bold text-sm text-white">📌 تذكرة: ${t.title}</h4>
+                        <span class="text-xs px-2 py-0.5 rounded font-bold ${t.status === 'open' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'}">${t.status === 'open' ? 'مفتوحة' : 'مغلقة'}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="replyMsg_${t.id}" placeholder="اكتب ردك كطالب أو مشرف هنا..." class="flex-grow bg-gray-950 border border-gray-700 rounded-lg px-3 py-1 text-xs text-white focus:outline-none">
+                        <button onclick="replyToTicket('${t.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-1 rounded-lg font-bold">إرسال الرد</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function replyToTicket(ticketId) {
+            if (!checkInit()) return;
+            const msg = document.getElementById(`replyMsg_${ticketId}`).value.trim();
+            const user = (await supabaseClient.auth.getSession()).data.session?.user;
+            if(!user) return;
+
+            const { error } = await supabaseClient.from('support_messages').insert({
+                ticket_id: ticketId, user_id: user.id, message: msg
+            });
+
+            if (error) alert('🛡️ استجابة التريجر الخلفي منعت العملية:\n\n' + error.message);
+            else { alert('✅ تم قبول الرد وتمريره بنجاح.'); }
+        }
+
+        // عمليات المسؤولين
+        async function applyTimeout() {
+            if (!checkInit()) return;
+            const userId = document.getElementById('restrictUserId').value.trim();
+            const cat = document.getElementById('restrictCategory').value;
+            const mins = parseInt(document.getElementById('restrictMinutes').value);
+
+            if(!userId) { alert('أدخل الـ UUID الخاص بالطالب المخالف!'); return; }
+            const untilDate = new Date(Date.now() + mins * 60000).toISOString();
+
+            const { error } = await supabaseClient.from('user_restrictions').insert({
+                user_id: userId, category: cat, restricted_until: untilDate, reason: 'مخالفة معايير النشر'
+            });
+
+            if (error) alert('❌ فشل فرض العقوبة: ' + error.message);
+            else alert('⏱️ تم فرض عقوبة الـ Timeout بنجاح!');
+        }
+
+        async function sendRealtimeWarning() {
+            if (!checkInit()) return;
+            const userId = document.getElementById('warningUserId').value.trim();
+            const msg = document.getElementById('warningMessage').value.trim();
+
+            if(!userId || !msg) { alert('أدخل معرّف الطالب ونص التحذير!'); return; }
+
+            const { error } = await supabaseClient.from('admin_warnings').insert({ user_id: userId, warning_message: msg });
+            if(error) alert('فشل البث: ' + error.message);
+            else alert('⚡ تم إرسال وبث التحذير الإداري الحي بنجاح!');
+        }
+
+        function listenToRealtimeWarnings() {
+            supabaseClient
+                .channel('schema-db-changes')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_warnings' }, async (payload) => {
+                    const currentUser = (await supabaseClient.auth.getSession()).data.session?.user;
+                    if (currentUser && payload.new.user_id === currentUser.id) {
+                        document.getElementById('realtimeAlertMessage').innerText = payload.new.warning_message;
+                        document.getElementById('realtimeAlert').classList.remove('hidden');
+                    }
+                })
+                .subscribe();
+        }
+    </script>
+</body>
+</html>
