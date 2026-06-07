@@ -2,32 +2,22 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة إبداعك | التفاعلية</title>
+    <title>منصة إبداعك</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>.hidden { display: none; }</style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen">
+<body class="bg-slate-950 text-white">
 
     <div id="landing-page" class="flex flex-col items-center justify-center h-screen text-center p-6">
-        <h1 class="text-6xl font-extrabold mb-6 text-emerald-400">منصة إبداعك</h1>
-        <p class="text-xl mb-8 max-w-lg text-slate-400">فضاءك الخاص للإبداع. تنتهي منشوراتك تلقائياً كل 48 ساعة!</p>
-        <button id="loginBtn" class="bg-emerald-600 hover:bg-emerald-500 px-10 py-4 rounded-2xl text-xl font-bold transition-all">ابدأ رحلة الإبداع الآن</button>
+        <h1 class="text-4xl font-bold mb-6 text-emerald-400">منصة إبداعك</h1>
+        <button id="loginBtn" class="bg-emerald-600 px-8 py-3 rounded-xl font-bold">ابدأ رحلة الإبداع</button>
     </div>
 
-    <div id="app-page" class="hidden container mx-auto p-6 max-w-3xl">
-        <header class="flex justify-between items-center mb-10">
-            <h2 class="text-3xl font-bold">لوحة إبداعك</h2>
-            <button onclick="logout()" class="text-red-400">خروج</button>
-        </header>
-
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 mb-8">
-            <textarea id="postInput" class="w-full bg-slate-800 p-4 rounded-xl mb-4 border border-slate-700 text-white" placeholder="بماذا تبدع اليوم؟"></textarea>
-            <button onclick="publishPost()" class="w-full bg-emerald-600 py-3 rounded-xl font-bold">نشر الفكرة</button>
-        </div>
-
-        <div id="postsContainer" class="space-y-4"></div>
+    <div id="app-page" class="hidden container mx-auto p-6">
+        <h2 class="text-2xl font-bold mb-4">لوحة إبداعك</h2>
+        <textarea id="postInput" class="w-full bg-slate-800 p-4 rounded-lg mb-4"></textarea>
+        <button onclick="publishPost()" class="bg-emerald-600 px-6 py-2 rounded">نشر الفكرة</button>
+        <div id="postsContainer" class="mt-6 space-y-2"></div>
     </div>
 
     <script>
@@ -36,50 +26,29 @@
             'sb_publishable_ZHnL1XC1Xhf5vvAswXTBRw_d3kuJLQj'
         );
 
-        // --- نظام التحقق الذكي ---
-        async function checkSession() {
+        // عند تحميل الصفحة، تأكد من تسجيل الدخول
+        window.addEventListener('load', async () => {
             const { data } = await client.auth.getSession();
             if (data.session) {
                 document.getElementById('landing-page').classList.add('hidden');
                 document.getElementById('app-page').classList.remove('hidden');
-                loadPosts();
             }
-        }
+        });
 
-        // تنفيذ التحقق عند تحميل الصفحة فوراً
-        window.onload = checkSession;
-
-        // تسجيل الدخول
+        // زر تسجيل الدخول موجه للرابط الذي حددته
         document.getElementById('loginBtn').onclick = async () => {
             await client.auth.signInWithOAuth({ 
                 provider: 'google', 
-                options: { redirectTo: window.location.origin } 
+                options: { redirectTo: 'https://lmjo-09.github.io/re/' } 
             });
         };
 
-        // النشر
         async function publishPost() {
             const input = document.getElementById('postInput');
             const { data: { user } } = await client.auth.getUser();
-            if(!user || !input.value) return;
-            
-            await client.from('posts').insert({
-                content: input.value,
-                user_id: user.id,
-                expires_at: new Date(Date.now() + 48*60*60*1000).toISOString()
-            });
+            await client.from('posts').insert({ content: input.value, user_id: user.id });
             input.value = '';
-            loadPosts();
         }
-
-        // عرض المنشورات
-        async function loadPosts() {
-            const { data } = await client.from('posts').select('*').order('created_at', { ascending: false });
-            const container = document.getElementById('postsContainer');
-            container.innerHTML = (data || []).map(p => `<div class="bg-slate-900 p-4 rounded-xl border border-slate-800">${p.content}</div>`).join('');
-        }
-
-        async function logout() { await client.auth.signOut(); location.reload(); }
     </script>
 </body>
 </html>
